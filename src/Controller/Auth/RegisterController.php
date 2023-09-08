@@ -23,6 +23,6 @@ class RegisterController extends AbstractController
     public function index(Request $request): JsonResponse
     {
         $registrationDto = $this->serializer->deserialize($request->getContent(), RegistrationDto::class, 'json');
-        return $this->registrationService->registerPost($registrationDto);
+        return $this->registrationService->register($registrationDto);
     }
 }

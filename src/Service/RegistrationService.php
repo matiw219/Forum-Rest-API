@@ -22,7 +22,7 @@ class RegistrationService
     ) {
     }
 
-    public function registerPost(RegistrationDto $registrationDto) : JsonResponse
+    public function register(RegistrationDto $registrationDto) : JsonResponse
     {
         if (!$registrationDto->getEmail() || !$registrationDto->getUsername() || !$registrationDto->getPassword()) {
             return new JsonResponse(['error' => 'The submitted inquiry does not contain all the required data'], 404);
