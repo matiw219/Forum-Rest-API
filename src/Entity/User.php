@@ -43,6 +43,9 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Column]
     private ?\DateTimeImmutable $createdAt = null;
 
+    #[ORM\OneToOne(mappedBy: 'user', cascade: ['persist', 'remove'])]
+    private ?AuthToken $authToken = null;
+
     public function getId(): ?int
     {
         return $this->id;
@@ -169,6 +172,28 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     public function setCreatedAt(\DateTimeImmutable $createdAt): static
     {
         $this->createdAt = $createdAt;
+
+        return $this;
+    }
+
+    public function getAuthToken(): ?AuthToken
+    {
+        return $this->authToken;
+    }
+
+    public function setAuthToken(?AuthToken $authToken): static
+    {
+        // unset the owning side of the relation if necessary
+        if ($authToken === null && $this->authToken !== null) {
+            $this->authToken->setUser(null);
+        }
+
+        // set the owning side of the relation if necessary
+        if ($authToken !== null && $authToken->getUser() !== $this) {
+            $authToken->setUser($this);
+        }
+
+        $this->authToken = $authToken;
 
         return $this;
     }
