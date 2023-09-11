@@ -7,29 +7,18 @@ use App\Validation\Constraint as Assert;
 
 class RegistrationDto
 {
-    #[Constraints\Email(message: 'The email {{ value }} is not a valid email.')]
-    private ?string $email = null;
-
-    #[Assert\Password]
-    private ?string $password = null;
-
-    #[Assert\Username]
-    private ?string $username = null;
-
-    private ?array $roles = null;
-    private ?string $numberPhone = null;
-    private ?string $country = null;
-    private ?string $state = null;
-
-    public function __construct(?string $email, ?string $password, ?string $username, ?array $roles, ?string $numberPhone, ?string $country, ?string $state)
-    {
-        $this->email = $email;
-        $this->password = $password;
-        $this->username = $username;
-        $this->roles = $roles;
-        $this->numberPhone = $numberPhone;
-        $this->country = $country;
-        $this->state = $state;
+    public function __construct(
+        #[Constraints\Email(message: 'The email {{ value }} is not a valid email.')]
+        private string $email,
+        #[Assert\Password]
+        private string $password,
+        #[Assert\Username]
+        private string $username,
+        private ?array $roles,
+        private ?string $numberPhone,
+        private ?string $country,
+        private ?string $state
+    ){
     }
 
     public function getEmail(): ?string

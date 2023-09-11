@@ -4,15 +4,11 @@ namespace App\Dto;
 
 class LoginDto
 {
-    // username or Email
-    private ?string $user;
 
-    private ?string $password;
-
-    public function __construct(?string $user, ?string $password)
-    {
-        $this->user = $user;
-        $this->password = $password;
+    public function __construct(
+        private string $user,
+        private string $password
+    ){
     }
 
     public function getUser(): ?string
