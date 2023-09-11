@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Controller\Auth;
 
 use App\Dto\RegistrationDto;
@@ -12,7 +14,6 @@ use Symfony\Component\Serializer\SerializerInterface;
 
 class RegisterController extends AbstractController
 {
-
     public function __construct(
         private RegistrationService $registrationService,
         private SerializerInterface $serializer
@@ -23,6 +24,7 @@ class RegisterController extends AbstractController
     public function index(Request $request): JsonResponse
     {
         $registrationDto = $this->serializer->deserialize($request->getContent(), RegistrationDto::class, 'json');
+
         return $this->registrationService->register($registrationDto);
     }
 }

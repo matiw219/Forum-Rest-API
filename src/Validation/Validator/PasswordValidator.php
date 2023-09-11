@@ -1,13 +1,14 @@
 <?php
 
-namespace App\Constraint;
+declare(strict_types=1);
+
+namespace App\Validation\Validator;
 
 use Symfony\Component\Validator\Constraint;
 use Symfony\Component\Validator\ConstraintValidator;
 
-class UsernameValidator extends ConstraintValidator
+class PasswordValidator extends ConstraintValidator
 {
-
     public function validate(mixed $value, Constraint $constraint)
     {
         if (!preg_match($constraint->regex, $value)) {

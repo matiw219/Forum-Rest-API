@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Controller\Auth;
 
 use App\Dto\LoginDto;
@@ -12,7 +14,6 @@ use Symfony\Component\Serializer\SerializerInterface;
 
 class LoginController extends AbstractController
 {
-
     public function __construct(
         private LoginService $loginService,
         private SerializerInterface $serializer
@@ -23,6 +24,7 @@ class LoginController extends AbstractController
     public function index(Request $request): JsonResponse
     {
         $registrationDto = $this->serializer->deserialize($request->getContent(), LoginDto::class, 'json');
+
         return $this->loginService->login($registrationDto);
     }
 }

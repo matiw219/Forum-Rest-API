@@ -1,28 +1,30 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Service;
 
 use App\Entity\AuthToken;
 use App\Entity\User;
+use App\Factory\AuthTokenFactory;
 use App\Repository\AuthTokenRepository;
 use Doctrine\ORM\EntityManagerInterface;
 
 class AuthTokenService
 {
-
     public function __construct(
         private AuthTokenRepository $tokenRepository,
         private EntityManagerInterface $entityManager,
     ){
     }
 
-    public function loggedInAs(?string $token = null) : ?User
+    public function loggedInAs(string $token = null) : ?User
     {
         if (!$token) {
             return null;
         }
 
-        $authToken = $this->tokenRepository->findOneBy(['token' => $token]);
+        $authToken = $this->tokenRepository->findOneBy(['hash' => $token]);
         if (!$authToken) {
             return null;
         }
@@ -33,7 +35,7 @@ class AuthTokenService
             return null;
         }
 
-        if ($authToken->getToken() === $token) {
+        if ($authToken->getHash() === $token) {
             return $authToken->getUser();
         }
 
@@ -48,34 +50,15 @@ class AuthTokenService
             return $user->getAuthToken();
         }
 
-        $token = $this->makeToken($user);
+        $token = AuthTokenFactory::create($user);
         $this->entityManager->persist($token);
         $this->entityManager->flush();
 
         return $token;
     }
 
-    private function makeToken(User $user) : AuthToken
-    {
-        $token = new AuthToken();
-        $token->setUser($user);
-        $token->setToken(bin2hex(random_bytes(32)));
-        $token->setCreatedAt(new \DateTimeImmutable());
-        
-        $expiresAt = new \DateTimeImmutable();
-        $expiresAt = $expiresAt->modify('+1 hour');
-        $token->setExpiresAt($expiresAt);
-        
-        return $token;
-    }
-
     public function patchToken(AuthToken $token) : void {
-        $token->setToken(bin2hex(random_bytes(32)));
-        $token->setCreatedAt(new \DateTimeImmutable());
-
-        $expiresAt = new \DateTimeImmutable();
-        $expiresAt = $expiresAt->modify('+1 hour');
-        $token->setExpiresAt($expiresAt);
+        AuthTokenFactory::patchToken($token);
 
         $this->entityManager->flush();
     }
@@ -89,5 +72,4 @@ class AuthTokenService
             $this->entityManager->flush();
         }
     }
-
 }

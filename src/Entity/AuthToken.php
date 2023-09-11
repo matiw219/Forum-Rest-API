@@ -11,16 +11,16 @@ class AuthToken
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
-    private ?int $id = null;
+    private int $id;
 
     #[ORM\OneToOne(inversedBy: 'authToken')]
-    private ?User $user = null;
+    private User $user;
 
     #[ORM\Column(length: 255)]
-    private ?string $token = null;
+    private string $hash;
 
     #[ORM\Column]
-    private ?\DateTimeImmutable $createdAt = null;
+    private \DateTimeImmutable $createdAt;
 
     #[ORM\Column(nullable: true)]
     private ?\DateTimeImmutable $expiresAt = null;
@@ -42,19 +42,19 @@ class AuthToken
         return $this;
     }
 
-    public function getToken(): ?string
+    public function getHash(): string
     {
-        return $this->token;
+        return $this->hash;
     }
 
-    public function setToken(string $token): static
+    public function setHash(string $hash): static
     {
-        $this->token = $token;
+        $this->hash = $hash;
 
         return $this;
     }
 
-    public function getCreatedAt(): ?\DateTimeImmutable
+    public function getCreatedAt(): \DateTimeImmutable
     {
         return $this->createdAt;
     }

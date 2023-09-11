@@ -26,7 +26,7 @@ services:
 
 
     # Constraints
-    App\Constraint\Username: ~
-    App\Constraint\UsernameValidator: ~
-    App\Constraint\Password: ~
-    App\Constraint\PasswordValidator: ~
+    App\Validation\Constraint\Username: ~
+    App\Validation\Validator\UsernameValidator: ~
+    App\Validation\Constraint\Password: ~
+    App\Validation\Validator\PasswordValidator: ~
