@@ -23,12 +23,6 @@ class RegistrationValidator extends AbstractValidator
             return;
         }
 
-        if (!$object->getEmail() || !$object->getUsername() || !$object->getPassword()) {
-            $this->addError('The submitted inquiry does not contain all required data');
-            $this->setCode(422);
-            return;
-        }
-
         $violations = ValidationHandler::getErrors($this->getValidator()->validate($object));
 
         if (!empty($violations)) {

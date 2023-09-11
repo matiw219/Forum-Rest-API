@@ -5,9 +5,7 @@ declare(strict_types=1);
 namespace App\Validation;
 
 use App\Dto\LoginDto;
-use App\Repository\UserRepository;
-use Doctrine\ORM\NonUniqueResultException;
-use Psr\Log\LoggerInterface;
+use App\Entity\User;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 
@@ -15,34 +13,14 @@ class LoginValidator extends AbstractValidator
 {
     public function __construct(
         ValidatorInterface $validator,
-        private UserRepository $userRepository,
-        private LoggerInterface $logger,
         private UserPasswordHasherInterface $passwordHasher,
     ){
         parent::__construct($validator);
     }
 
-    public function validate(object $object): void
+    public function validateWithUser(object $object, User $user): void
     {
         if ((!$object instanceof LoginDto)) {
-            return;
-        }
-
-        if (!$object->getUser() || !$object->getPassword()) {
-            $this->addError('The submitted inquiry does not contain all the required data');
-            $this->setCode(422);
-            return;
-        }
-
-        $user = null;
-
-        try {
-            $user = $this->userRepository->findUserByUsernameOrEmail($object->getUser());
-        }
-        catch (NonUniqueResultException $exception) {
-            $this->logger->error('An error occurred while searching for the user: ' . $exception->getMessage());
-            $this->addError('An unexpected error occurred');
-            $this->setCode(500);
             return;
         }
 
@@ -50,5 +28,9 @@ class LoginValidator extends AbstractValidator
             $this->addError('The login or password provided is incorrect');
             $this->setCode(401);
         }
+    }
+
+    public function validate(object $object): void
+    {
     }
 }
