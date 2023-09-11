@@ -8,14 +8,12 @@ use Symfony\Component\Validator\Validator\ValidatorInterface;
 
 abstract class AbstractValidator
 {
-    private ?ValidatorInterface $validator = null;
     private array $errors = [];
     private int $code = 0;
 
-    public function __construct(ValidatorInterface $validator, object $object)
-    {
-        $this->validator = $validator;
-        $this->validate($object);
+    public function __construct(
+        private ValidatorInterface $validator
+    ){
     }
 
     public function getErrors() : array

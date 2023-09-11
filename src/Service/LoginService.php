@@ -10,25 +10,22 @@ use App\Validation\LoginValidator;
 use Doctrine\ORM\NonUniqueResultException;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
-use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
-use Symfony\Component\Validator\Validator\ValidatorInterface;
 
 class LoginService
 {
     public function __construct(
         private UserRepository $userRepository,
-        private ValidatorInterface $validator,
-        private UserPasswordHasherInterface $passwordHasher,
         private AuthTokenService $tokenService,
-        private LoggerInterface $logger
+        private LoggerInterface $logger,
+        private LoginValidator $loginValidator
     ){
     }
 
     public function login(LoginDto $loginDto) : JsonResponse
     {
-        $validator = new LoginValidator($this->validator, $loginDto, $this->userRepository, $this->logger, $this->passwordHasher);
-        if ($validator->hasErrors()) {
-            return new JsonResponse(['error' => $validator->getErrors()], $validator->getCode());
+        $this->loginValidator->validate($loginDto);
+        if ($this->loginValidator->hasErrors()) {
+            return new JsonResponse(['error' => $this->loginValidator->getErrors()], $this->loginValidator->getCode());
         }
 
         $user = null;

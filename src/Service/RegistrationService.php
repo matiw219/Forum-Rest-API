@@ -6,28 +6,25 @@ namespace App\Service;
 
 use App\Dto\RegistrationDto;
 use App\Factory\CreateUserFactory;
-use App\Repository\UserRepository;
 use App\Validation\RegistrationValidator;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
-use Symfony\Component\Validator\Validator\ValidatorInterface;
 
 class RegistrationService
 {
     public function __construct(
-        private UserRepository $userRepository,
         private UserPasswordHasherInterface $passwordHasher,
-        private ValidatorInterface $validator,
-        private EntityManagerInterface $entityManager
+        private EntityManagerInterface $entityManager,
+        private RegistrationValidator $registrationValidator
     ) {
     }
 
     public function register(RegistrationDto $registrationDto) : JsonResponse
     {
-        $validator = new RegistrationValidator($this->validator, $registrationDto, $this->userRepository);
-        if ($validator->hasErrors()) {
-            return new JsonResponse(['error' => $validator->getErrors()], $validator->getCode());
+        $this->registrationValidator->validate($registrationDto);
+        if ($this->registrationValidator->hasErrors()) {
+            return new JsonResponse(['error' => $this->registrationValidator->getErrors()], $this->registrationValidator->getCode());
         }
 
         $user = CreateUserFactory::create($registrationDto, $this->passwordHasher);
