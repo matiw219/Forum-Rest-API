@@ -3,16 +3,17 @@
 namespace App\Dto;
 
 use Symfony\Component\Validator\Constraints;
+use App\Validation\Constraint as Assert;
 
 class RegistrationDto
 {
     #[Constraints\Email(message: 'The email {{ value }} is not a valid email.')]
     private ?string $email = null;
 
-    #[\App\Validation\Constraint\Password]
+    #[Assert\Password]
     private ?string $password = null;
 
-    #[\App\Validation\Constraint\Username]
+    #[Assert\Username]
     private ?string $username = null;
 
     private ?array $roles = null;
@@ -20,14 +21,20 @@ class RegistrationDto
     private ?string $country = null;
     private ?string $state = null;
 
+    public function __construct(?string $email, ?string $password, ?string $username, ?array $roles, ?string $numberPhone, ?string $country, ?string $state)
+    {
+        $this->email = $email;
+        $this->password = $password;
+        $this->username = $username;
+        $this->roles = $roles;
+        $this->numberPhone = $numberPhone;
+        $this->country = $country;
+        $this->state = $state;
+    }
+
     public function getEmail(): ?string
     {
         return $this->email;
-    }
-
-    public function setEmail(?string $email): void
-    {
-        $this->email = $email;
     }
 
     public function getPassword(): ?string
@@ -35,19 +42,9 @@ class RegistrationDto
         return $this->password;
     }
 
-    public function setPassword(?string $password): void
-    {
-        $this->password = $password;
-    }
-
     public function getUsername(): ?string
     {
         return $this->username;
-    }
-
-    public function setUsername(?string $username): void
-    {
-        $this->username = $username;
     }
 
     public function getRoles(): ?array
@@ -55,19 +52,9 @@ class RegistrationDto
         return $this->roles;
     }
 
-    public function setRoles(?array $roles): void
-    {
-        $this->roles = $roles;
-    }
-
     public function getNumberPhone(): ?string
     {
         return $this->numberPhone;
-    }
-
-    public function setNumberPhone(?string $numberPhone): void
-    {
-        $this->numberPhone = $numberPhone;
     }
 
     public function getCountry(): ?string
@@ -75,18 +62,8 @@ class RegistrationDto
         return $this->country;
     }
 
-    public function setCountry(?string $country): void
-    {
-        $this->country = $country;
-    }
-
     public function getState(): ?string
     {
         return $this->state;
-    }
-
-    public function setState(?string $state): void
-    {
-        $this->state = $state;
     }
 }

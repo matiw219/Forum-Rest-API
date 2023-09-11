@@ -9,23 +9,19 @@ class LoginDto
 
     private ?string $password;
 
+    public function __construct(?string $user, ?string $password)
+    {
+        $this->user = $user;
+        $this->password = $password;
+    }
+
     public function getUser(): ?string
     {
         return $this->user;
     }
 
-    public function setUser(?string $user): void
-    {
-        $this->user = $user;
-    }
-
     public function getPassword(): ?string
     {
         return $this->password;
-    }
-
-    public function setPassword(?string $password): void
-    {
-        $this->password = $password;
     }
 }
