@@ -9,16 +9,16 @@ class RegistrationDto
 {
     public function __construct(
         #[Constraints\Email(message: 'The email {{ value }} is not a valid email.')]
-        private string $email,
+        private readonly string $email,
         #[Assert\Password]
-        private string $password,
+        private readonly string $password,
         #[Assert\Username]
-        private string $username,
-        private ?array $roles,
-        private ?string $numberPhone,
-        private ?string $country,
-        private ?string $state
-    ){
+        private readonly string $username,
+        private readonly ?array $roles,
+        private readonly ?string $numberPhone,
+        private readonly ?string $country,
+        private readonly ?string $state
+    ) {
     }
 
     public function getEmail(): ?string

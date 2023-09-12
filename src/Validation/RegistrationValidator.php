@@ -13,7 +13,7 @@ class RegistrationValidator extends AbstractValidator
     public function __construct(
         ValidatorInterface $validator,
         private UserRepository $userRepository
-    ){
+    ) {
         parent::__construct($validator);
     }
 

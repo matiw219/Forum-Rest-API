@@ -4,11 +4,10 @@ namespace App\Dto;
 
 class LoginDto
 {
-
     public function __construct(
-        private string $user,
-        private string $password
-    ){
+        private readonly string $user,
+        private readonly string $password
+    ) {
     }
 
     public function getUser(): ?string

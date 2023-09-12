@@ -23,7 +23,8 @@ class RegistrationService
     ) {
     }
 
-    public function register(Request $request) : JsonResponse {
+    public function register(Request $request): JsonResponse
+    {
         $data = json_decode($request->getContent(), true);
 
         if (empty($data['email'])) {
@@ -42,7 +43,10 @@ class RegistrationService
         $this->registrationValidator->validate($registrationDto);
 
         if ($this->registrationValidator->hasErrors()) {
-            return new JsonResponse(['error' => $this->registrationValidator->getErrors()], $this->registrationValidator->getCode());
+            return new JsonResponse(
+                ['error' => $this->registrationValidator->getErrors()],
+                $this->registrationValidator->getCode()
+            );
         }
 
         $user = CreateUserFactory::create($registrationDto, $this->passwordHasher);

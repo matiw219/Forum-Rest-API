@@ -21,10 +21,10 @@ class LoginService
         private LoggerInterface $logger,
         private LoginValidator $loginValidator,
         private SerializerInterface $serializer
-    ){
+    ) {
     }
 
-    public function login(Request $request) : JsonResponse
+    public function login(Request $request): JsonResponse
     {
         $data = json_decode($request->getContent(), true);
 
@@ -46,7 +46,8 @@ class LoginService
         }
 
         $loginDto = $this->serializer->deserialize($request->getContent(), LoginDto::class, 'json');
-        $this->loginValidator->validateWithUser($loginDto, $user);
+        $this->loginValidator->setUser($user);
+        $this->loginValidator->validate($loginDto);
 
         if ($this->loginValidator->hasErrors()) {
             return new JsonResponse(['error' => $this->loginValidator->getErrors()], $this->loginValidator->getCode());

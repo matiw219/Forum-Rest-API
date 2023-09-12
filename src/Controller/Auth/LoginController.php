@@ -13,8 +13,8 @@ use Symfony\Component\Routing\Annotation\Route;
 class LoginController extends AbstractController
 {
     public function __construct(
-        private LoginService $loginService,
-    ){
+        private readonly LoginService $loginService,
+    ) {
     }
 
     #[Route('/auth/login', name: 'app_auth_login', methods: ['POST'])]

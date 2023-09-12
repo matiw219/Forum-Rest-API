@@ -9,7 +9,7 @@ use App\Entity\User;
 
 class AuthTokenFactory
 {
-    public static function create(User $user) : ?AuthToken
+    public static function create(User $user): ?AuthToken
     {
         $token = new AuthToken();
         $token->setUser($user);
@@ -23,7 +23,7 @@ class AuthTokenFactory
         return $token;
     }
 
-    public static function patchToken(AuthToken $token) : AuthToken
+    public static function patchToken(AuthToken $token): AuthToken
     {
         $token->setHash(bin2hex(random_bytes(32)));
         $token->setCreatedAt(new \DateTimeImmutable());

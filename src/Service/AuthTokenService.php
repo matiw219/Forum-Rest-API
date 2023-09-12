@@ -15,10 +15,10 @@ class AuthTokenService
     public function __construct(
         private AuthTokenRepository $tokenRepository,
         private EntityManagerInterface $entityManager,
-    ){
+    ) {
     }
 
-    public function loggedInAs(string $token = null) : ?User
+    public function loggedInAs(string $token = null): ?User
     {
         if (!$token) {
             return null;
@@ -42,7 +42,7 @@ class AuthTokenService
         return null;
     }
 
-    public function createNewToken(User $user) : AuthToken
+    public function createNewToken(User $user): AuthToken
     {
         if ($user->getAuthToken()) {
             $this->patchToken($user->getAuthToken());
@@ -57,13 +57,14 @@ class AuthTokenService
         return $token;
     }
 
-    public function patchToken(AuthToken $token) : void {
+    public function patchToken(AuthToken $token): void
+    {
         AuthTokenFactory::patchToken($token);
 
         $this->entityManager->flush();
     }
-    
-    private function deleteOldToken(User $user) : void
+
+    private function deleteOldToken(User $user): void
     {
         $token = $user->getAuthToken();
 

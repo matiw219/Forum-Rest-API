@@ -8,15 +8,16 @@ use Symfony\Component\Validator\Validator\ValidatorInterface;
 
 abstract class AbstractValidator
 {
+    /*** @var array<int, string> $errors */
     private array $errors = [];
     private int $code = 0;
 
     public function __construct(
         private ValidatorInterface $validator
-    ){
+    ) {
     }
 
-    public function getErrors() : array
+    public function getErrors(): array
     {
         return $this->errors;
     }
@@ -26,7 +27,7 @@ abstract class AbstractValidator
         $this->errors[] = $error;
     }
 
-    public function hasErrors() : bool
+    public function hasErrors(): bool
     {
         return count($this->errors) > 0;
     }
@@ -46,5 +47,5 @@ abstract class AbstractValidator
         return $this->validator;
     }
 
-    public abstract function validate(object $object) : void;
+    abstract public function validate(object $object): void;
 }

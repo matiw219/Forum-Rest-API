@@ -10,7 +10,7 @@ use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 
 class CreateUserFactory
 {
-    public static function create(RegistrationDto $registrationDto, UserPasswordHasherInterface $passwordHasher) : ?User
+    public static function create(RegistrationDto $registrationDto, UserPasswordHasherInterface $passwordHasher): ?User
     {
         $user = new User();
         $user->setEmail($registrationDto->getEmail());
