@@ -11,9 +11,9 @@ class Post
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
-    private ?int $id = null;
+    private int $id;
 
-    public function getId(): ?int
+    public function getId(): int
     {
         return $this->id;
     }
