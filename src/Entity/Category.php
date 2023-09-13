@@ -28,7 +28,7 @@ class Category
     private ?Category $parent = null;
 
     #[ORM\OneToMany(mappedBy: 'parent', targetEntity: Category::class)]
-    private Collection $children;
+    private ?Collection $children = null;
 
     #[ORM\OneToMany(mappedBy: 'category', targetEntity: Post::class)]
     private Collection $posts;
@@ -89,12 +89,12 @@ class Category
         return $this->parent;
     }
 
-    public function getChildren(): Collection
+    public function getChildren(): ?Collection
     {
         return $this->children;
     }
 
-    public function setChildren(Collection $children): void
+    public function setChildren(?Collection $children): void
     {
         $this->children = $children;
     }
