@@ -17,7 +17,7 @@ class CategoryGetListController extends AbstractController
     ) {
     }
 
-    #[Route('/categories', name: 'category_list', methods: ['GET'])]
+    #[Route('/categories', name: 'get_categories', methods: ['GET'])]
     public function list(Request $request): JsonResponse
     {
         return $this->categoryService->getAll($request);

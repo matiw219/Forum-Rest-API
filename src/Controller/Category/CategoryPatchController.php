@@ -17,8 +17,8 @@ class CategoryPatchController extends AbstractController
     ) {
     }
 
-    #[Route('/categories', name: 'app_patch_categories', methods: ['PATCH'])]
-    public function index(Request $request): JsonResponse
+    #[Route('/categories', name: 'patch_category', methods: ['PATCH'])]
+    public function patch(Request $request): JsonResponse
     {
         return $this->categoryService->patch($request);
     }
