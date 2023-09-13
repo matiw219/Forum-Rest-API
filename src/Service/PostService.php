@@ -41,15 +41,16 @@ class PostService
                     'page' => -1,
                     'maxResults' => $postsCount,
                     'results' => $postsCount
-                ]
+                ],
+                'posts' => $this->formatPosts($posts)
             ], 200);
         }
 
 
         $maxResults = (int) $request->get('maxResults', Paginator::DEFAULT_MAX_RESULTS);
-        $categories = $this->getPosts($page, $maxResults);
+        $posts = $this->getPosts($page, $maxResults);
 
-        if (0 === count($categories)) {
+        if (0 === count($posts)) {
             return new JsonResponse([
                 'error' => 'Page not found'
             ], 404);
@@ -57,11 +58,11 @@ class PostService
 
         return new JsonResponse([
             'info' => [
-                'page' => $page,
+                'page' => (int) $page,
                 'maxResults' => $maxResults,
-                'results' => count($categories)
+                'results' => count($posts)
             ],
-            'categories' => $this->formatPosts($categories)
+            'posts' => $this->formatPosts($posts)
         ], 200);
     }
 
@@ -137,7 +138,7 @@ class PostService
             return $this->getAllPosts();
         }
 
-        $this->paginator->setEntity(Category::class);
+        $this->paginator->setEntity(Post::class);
         $this->paginator->setPage($page);
         $this->paginator->setMaxResults($maxResults);
 
