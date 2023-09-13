@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Controller\Array;
+namespace App\Array;
 
 class BetterArray
 {
