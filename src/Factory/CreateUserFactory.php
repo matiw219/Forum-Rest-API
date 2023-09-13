@@ -16,11 +16,6 @@ class CreateUserFactory
         $user->setEmail($registrationDto->getEmail());
         $user->setUsername($registrationDto->getUsername());
         $user->setPassword($passwordHasher->hashPassword($user, $registrationDto->getPassword()));
-
-        if ($registrationDto->getRoles() != null) {
-            $user->setRoles($registrationDto->getRoles());
-        }
-
         $user->setNumberPhone($registrationDto->getNumberPhone());
         $user->setCountry($registrationDto->getCountry());
         $user->setState($registrationDto->getState());

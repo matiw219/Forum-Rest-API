@@ -14,7 +14,6 @@ class RegistrationDto
         private readonly string $password,
         #[Assert\Username]
         private readonly string $username,
-        private readonly ?array $roles,
         private readonly ?string $numberPhone,
         private readonly ?string $country,
         private readonly ?string $state
@@ -34,11 +33,6 @@ class RegistrationDto
     public function getUsername(): ?string
     {
         return $this->username;
-    }
-
-    public function getRoles(): ?array
-    {
-        return $this->roles;
     }
 
     public function getNumberPhone(): ?string
