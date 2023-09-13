@@ -10,15 +10,15 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Annotation\Route;
 
-class GetCategoriesController extends AbstractController
+class CategoryGetListController extends AbstractController
 {
     public function __construct(
         private readonly CategoryService $categoryService
     ) {
     }
 
-    #[Route('/categories', name: 'app_get_categories', methods: ['GET'])]
-    public function index(Request $request): JsonResponse
+    #[Route('/categories', name: 'category_list', methods: ['GET'])]
+    public function list(Request $request): JsonResponse
     {
         return $this->categoryService->getAll($request);
     }
