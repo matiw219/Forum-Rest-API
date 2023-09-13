@@ -2,20 +2,29 @@
 
 namespace App\Service;
 
+use App\Dto\PostDto;
 use App\Entity\Category;
 use App\Entity\Comment;
 use App\Entity\Post;
+use App\Factory\PostFactory;
 use App\Paginator\Paginator;
 use App\Repository\PostRepository;
+use App\Validation\PostValidator;
+use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\Serializer\SerializerInterface;
 
 class PostService
 {
     public function __construct(
         private readonly PostRepository $postRepository,
         private readonly Paginator $paginator,
-        private readonly AuthTokenService $authTokenService
+        private readonly AuthTokenService $authTokenService,
+        private readonly SerializerInterface $serializer,
+        private readonly PostValidator $postValidator,
+        private readonly CategoryService $categoryService,
+        private readonly EntityManagerInterface $entityManager
     ) {
     }
 
@@ -57,7 +66,7 @@ class PostService
     }
 
 
-    public function post(Request $request): JsonResponse
+    public function post(Request $request, int $categoryId): JsonResponse
     {
         $userToken = $request->headers->get('Authorization');
 
@@ -66,6 +75,14 @@ class PostService
 
         if ($notLoggedInResponse) {
             return $notLoggedInResponse;
+        }
+
+        $category = $this->categoryService->findById($categoryId);
+
+        if (!$category) {
+            return new JsonResponse([
+                'error' => 'Category not found'
+            ], 404);
         }
 
         $data = json_decode($request->getContent(), true);
@@ -79,9 +96,25 @@ class PostService
         if (empty($data['content'])) {
             return new JsonResponse([
                 'error' => 'Type post content'
-            ]);
+            ], 400);
         }
 
+        $postDto = $this->serializer->deserialize($request->getContent(), PostDto::class, 'json');
+        $this->postValidator->validate($postDto);
+
+        if ($this->postValidator->hasErrors()) {
+            return new JsonResponse([
+                'error' => $this->postValidator->getErrors()[0],
+            ], $this->postValidator->getCode());
+        }
+
+        $post = PostFactory::create($postDto, $user, $category);
+        $this->entityManager->persist($post);
+        $this->entityManager->flush();
+
+        return new JsonResponse([
+            'post' => $this->formatPost($post)
+        ], 201);
     }
 
     private function getPosts(int $page = 1, int $maxResults = Paginator::DEFAULT_MAX_RESULTS): array
