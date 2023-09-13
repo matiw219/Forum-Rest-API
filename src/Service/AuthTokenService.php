@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Service;
 
-use App\Controller\Array\BetterArray;
+use App\Array\BetterArray;
 use App\Entity\AuthToken;
 use App\Entity\User;
 use App\Factory\AuthTokenFactory;
