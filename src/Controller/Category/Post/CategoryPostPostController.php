@@ -16,8 +16,8 @@ class CategoryPostPostController extends AbstractController
     }
 
     #[Route('/categories/{id}/posts', name: 'post_post', methods: ['POST'])]
-    public function index(Request $request): JsonResponse
+    public function index(Request $request, int $id): JsonResponse
     {
-        return $this->postService->post($request);
+        return $this->postService->post($request, $id);
     }
 }
