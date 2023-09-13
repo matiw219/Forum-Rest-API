@@ -26,6 +26,12 @@ class AuthTokenService
             return null;
         }
 
+        if (!str_starts_with($token, 'Bearer ')) {
+            return null;
+        }
+
+        $token = trim($token, 'Bearer ');
+
         $authToken = $this->tokenRepository->findOneBy(['hash' => $token]);
         if (!$authToken) {
             return null;
