@@ -13,7 +13,11 @@ class AuthTokenFactory
     {
         $token = new AuthToken();
         $token->setUser($user);
-        $token->setHash(bin2hex(random_bytes(32)));
+        try {
+            $token->setHash(bin2hex(random_bytes(32)));
+        } catch (\Exception $e) {
+            die('Random cannot be found');
+        }
         $token->setCreatedAt(new \DateTimeImmutable());
 
         $expiresAt = new \DateTimeImmutable();
@@ -25,9 +29,12 @@ class AuthTokenFactory
 
     public static function patchToken(AuthToken $token): AuthToken
     {
-        $token->setHash(bin2hex(random_bytes(32)));
+        try {
+            $token->setHash(bin2hex(random_bytes(32)));
+        } catch (\Exception $e) {
+            die('Random cannot be found');
+        }
         $token->setCreatedAt(new \DateTimeImmutable());
-
         $expiresAt = new \DateTimeImmutable();
         $expiresAt = $expiresAt->modify('+1 hour');
         $token->setExpiresAt($expiresAt);
