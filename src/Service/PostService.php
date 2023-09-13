@@ -14,7 +14,8 @@ class PostService
 {
     public function __construct(
         private readonly PostRepository $postRepository,
-        private readonly Paginator $paginator
+        private readonly Paginator $paginator,
+        private readonly AuthTokenService $authTokenService
     ) {
     }
 
@@ -53,6 +54,34 @@ class PostService
             ],
             'categories' => $this->formatPosts($categories)
         ], 200);
+    }
+
+
+    public function post(Request $request): JsonResponse
+    {
+        $userToken = $request->headers->get('Authorization');
+
+        $user = $this->authTokenService->loggedInAs($userToken);
+        $notLoggedInResponse = $this->authTokenService->responseNotLoggedIn($user);
+
+        if ($notLoggedInResponse) {
+            return $notLoggedInResponse;
+        }
+
+        $data = json_decode($request->getContent(), true);
+
+        if (empty($data['title'])) {
+            return new JsonResponse([
+                'error' => 'Type post title'
+            ], 400);
+        }
+
+        if (empty($data['content'])) {
+            return new JsonResponse([
+                'error' => 'Type post content'
+            ]);
+        }
+
     }
 
     private function getPosts(int $page = 1, int $maxResults = Paginator::DEFAULT_MAX_RESULTS): array
