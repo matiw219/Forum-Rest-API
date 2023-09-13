@@ -67,6 +67,17 @@ class PostService
 
     public function get(int $id): JsonResponse
     {
+        $post = $this->findById($id);
+
+        if (!$post) {
+            return new JsonResponse([
+                'error' => 'Post not found'
+            ], 404);
+        }
+
+        return new JsonResponse([
+            'post' => $this->formatPost($post)
+        ], 200);
     }
 
     public function post(Request $request, int $categoryId): JsonResponse
@@ -171,5 +182,10 @@ class PostService
         }
 
         return $formattedPosts;
+    }
+
+    public function findById(int $id): ?Post
+    {
+        return $this->postRepository->find($id);
     }
 }
