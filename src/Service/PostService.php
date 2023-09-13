@@ -65,6 +65,9 @@ class PostService
         ], 200);
     }
 
+    public function get(int $id): JsonResponse
+    {
+    }
 
     public function post(Request $request, int $categoryId): JsonResponse
     {
