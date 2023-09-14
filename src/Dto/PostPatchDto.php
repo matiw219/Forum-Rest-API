@@ -5,12 +5,18 @@ namespace App\Dto;
 class PostPatchDto
 {
     public function __construct(
+        private readonly int $id,
         private readonly ?int $createdBy,
         private readonly ?int $category,
         private readonly ?string $title,
         private readonly ?string $content,
         private readonly ?int $views
     ) {
+    }
+
+    public function getId(): int
+    {
+        return $this->id;
     }
 
     public function getCreatedBy(): ?int
