@@ -25,7 +25,8 @@ class PostService
         private readonly SerializerInterface $serializer,
         private readonly PostValidator $postValidator,
         private readonly CategoryService $categoryService,
-        private readonly EntityManagerInterface $entityManager
+        private readonly EntityManagerInterface $entityManager,
+        private readonly UserService $userService
     ) {
     }
 
@@ -193,7 +194,36 @@ class PostService
             ], 404);
         }
 
-        return new JsonResponse([]);
+        if ($postPatchDto->getCreatedBy()) {
+            $newCreator = $this->userService->findUserById($postPatchDto->getCreatedBy());
+
+            if (!$newCreator) {
+                return new JsonResponse([
+                    'error' => 'New creator does not exists'
+                ], 404);
+            }
+
+            $post->setCreatedBy($newCreator);
+        }
+
+        if ($postPatchDto->getCategory()) {
+            $category = $this->categoryService->findById($postPatchDto->getCategory());
+
+            if (!$category) {
+                return new JsonResponse([
+                    'error' => 'New category does not exists'
+                ], 404);
+            }
+
+            $post->setCategory($category);
+        }
+
+        PostFactory::patchPost($post, $postPatchDto);
+        $this->entityManager->flush();
+
+        return new JsonResponse([
+            'post' => $this->formatPost($post)
+        ], 202);
     }
 
     private function getPosts(int $page = 1, int $maxResults = Paginator::DEFAULT_MAX_RESULTS): array
