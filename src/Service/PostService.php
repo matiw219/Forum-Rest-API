@@ -3,6 +3,7 @@
 namespace App\Service;
 
 use App\Dto\PostDto;
+use App\Dto\PostPatchDto;
 use App\Entity\Category;
 use App\Entity\Comment;
 use App\Entity\Post;
@@ -161,6 +162,38 @@ class PostService
         $this->entityManager->flush();
 
         return new JsonResponse([], 204);
+    }
+
+    public function patch(Request $request): JsonResponse
+    {
+        $userToken = $request->headers->get('Authorization');
+
+        $user = $this->authTokenService->loggedInAs($userToken);
+        $notLoggedNotAdminResponse = $this->authTokenService->responseNotLoggedNotAdmin($user);
+
+        if ($notLoggedNotAdminResponse) {
+            return $notLoggedNotAdminResponse;
+        }
+
+        $data = json_decode($request->getContent(), true);
+
+        if (empty($data['id'])) {
+            return new JsonResponse([
+                'error' => 'Enter a post id'
+            ], 400);
+        }
+
+        /** @var PostPatchDto $postPatchDto */
+        $postPatchDto = $this->serializer->deserialize($request->getContent(), PostPatchDto::class, 'json');
+        $post = $this->findById($postPatchDto->getId());
+
+        if (!$post) {
+            return new JsonResponse([
+                'error' => 'Post does not exists'
+            ], 404);
+        }
+
+        return new JsonResponse([]);
     }
 
     private function getPosts(int $page = 1, int $maxResults = Paginator::DEFAULT_MAX_RESULTS): array
