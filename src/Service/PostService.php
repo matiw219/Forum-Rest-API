@@ -132,6 +132,37 @@ class PostService
         ], 201);
     }
 
+    public function remove(Request $request, int $id): JsonResponse
+    {
+        $userToken = $request->headers->get('Authorization');
+
+        $user = $this->authTokenService->loggedInAs($userToken);
+        $notLoggedNotAdminResponse = $this->authTokenService->responseNotLoggedNotAdmin($user);
+
+        if ($notLoggedNotAdminResponse) {
+            return $notLoggedNotAdminResponse;
+        }
+
+        $post = $this->findById($id);
+
+        if (!$post) {
+            return new JsonResponse([
+                'error' => 'Post not found'
+            ], 404);
+        }
+
+        /** @var Comment $comment */
+        foreach ($post->getComments() as $comment) {
+            $this->entityManager->remove($comment);
+        }
+
+        $this->entityManager->flush();
+        $this->entityManager->remove($post);
+        $this->entityManager->flush();
+
+        return new JsonResponse([], 204);
+    }
+
     private function getPosts(int $page = 1, int $maxResults = Paginator::DEFAULT_MAX_RESULTS): array
     {
         if ($page == (-1)) {
