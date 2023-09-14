@@ -309,7 +309,7 @@ class CategoryService
         ];
     }
 
-    private function formatCategories(array $categories): array
+    public function formatCategories(array $categories): array
     {
         $formattedCategories = [];
 

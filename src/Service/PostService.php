@@ -83,6 +83,22 @@ class PostService
         ], 200);
     }
 
+    public function getCategoryPosts(int $categoryId): JsonResponse
+    {
+        $category = $this->categoryService->findById($categoryId);
+
+        if (!$category) {
+            return new JsonResponse([
+                'error' => 'Category not found'
+            ], 404);
+        }
+
+        return new JsonResponse([
+            'category' => $this->categoryService->formatCategory($category),
+            'posts' => $this->formatPosts($category->getPosts()->toArray())
+        ], 200);
+    }
+
     public function post(Request $request, int $categoryId): JsonResponse
     {
         $userToken = $request->headers->get('Authorization');
