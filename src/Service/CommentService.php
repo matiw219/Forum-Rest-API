@@ -2,13 +2,17 @@
 
 namespace App\Service;
 
+use App\Dto\CommentPatchDto;
+use App\Dto\PostPatchDto;
 use App\Entity\Comment;
 use App\Factory\CommentFactory;
+use App\Factory\PostFactory;
 use App\Paginator\Paginator;
 use App\Repository\CommentRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\Serializer\SerializerInterface;
 
 class CommentService
 {
@@ -17,7 +21,9 @@ class CommentService
         private readonly Paginator $paginator,
         private readonly AuthTokenService $authTokenService,
         private readonly PostService $postService,
-        private readonly EntityManagerInterface $entityManager
+        private readonly EntityManagerInterface $entityManager,
+        private readonly SerializerInterface $serializer,
+        private readonly UserService $userService
     ) {
     }
 
@@ -108,6 +114,70 @@ class CommentService
         return new JsonResponse([
             'comment' => $this->formatComment($comment)
         ], 201);
+    }
+
+    public function patch(Request $request): JsonResponse
+    {
+        $userToken = $request->headers->get('Authorization');
+
+        $user = $this->authTokenService->loggedInAs($userToken);
+        $notLoggedNotAdminResponse = $this->authTokenService->responseNotLoggedNotAdmin($user);
+
+        if ($notLoggedNotAdminResponse) {
+            return $notLoggedNotAdminResponse;
+        }
+
+        $data = json_decode($request->getContent(), true);
+
+        if (empty($data['id'])) {
+            return new JsonResponse([
+                'error' => 'Enter a comment id'
+            ], 400);
+        }
+
+        /** @var CommentPatchDto $commentPatchDto */
+        $commentPatchDto = $this->serializer->deserialize($request->getContent(), CommentPatchDto::class, 'json');
+        $comment = $this->findById($commentPatchDto->getId());
+
+        if (!$comment) {
+            return new JsonResponse([
+                'error' => 'Comment does not exists'
+            ], 404);
+        }
+
+        if ($commentPatchDto->getCreatedBy()) {
+            $newCreator = $this->userService->findUserById($commentPatchDto->getCreatedBy());
+
+            if (!$newCreator) {
+                return new JsonResponse([
+                    'error' => 'New creator does not exists'
+                ], 404);
+            }
+
+            $comment->setCreatedBy($newCreator);
+        }
+
+        if ($commentPatchDto->getPost()) {
+            $newPost = $this->postService->findById($commentPatchDto->getId());
+
+            if (!$newPost) {
+                return new JsonResponse([
+                    'error' => 'New post does not exists'
+                ], 404);
+            }
+
+            $comment->setPost($newPost);
+        }
+
+        if ($commentPatchDto->getContent()) {
+            $comment->setContent($commentPatchDto->getContent());
+        }
+
+        $this->entityManager->flush();
+
+        return new JsonResponse([
+            'comment' => $this->formatComment($comment)
+        ], 202);
     }
 
     public function remove(Request $request, int $commentId): JsonResponse
