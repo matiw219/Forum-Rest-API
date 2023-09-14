@@ -54,6 +54,11 @@ class CommentService
         ], 200);
     }
 
+
+    public function post(Request $request, int $id): JsonResponse
+    {
+    }
+
     private function getComments(int $page = 1, int $maxResults = Paginator::DEFAULT_MAX_RESULTS): array
     {
         if ($page == (-1)) {
