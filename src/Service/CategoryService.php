@@ -9,6 +9,9 @@ use App\Entity\Post;
 use App\Factory\CategoryFactory;
 use App\Paginator\Paginator;
 use App\Repository\CategoryRepository;
+use App\Response\AbstractResponse;
+use App\Response\CustomResponse;
+use App\Response\ErrorResponse;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -24,40 +27,35 @@ class CategoryService
     ) {
     }
 
-    public function getAll(Request $request): JsonResponse
+    public function getAll(?int $page, ?int $maxResults): AbstractResponse
     {
-        $page = $request->get('page');
-
         if ($page == null) {
             $categories = $this->getAllCategories();
             $categoriesCount = count($categories);
 
-            return new JsonResponse([
-                'info' => [
+            return new CustomResponse([
+                'paginator' => [
                     'page' => -1,
                     'maxResults' => $categoriesCount,
                     'results' => $categoriesCount
                 ],
-                'categories' => $this->formatCategories($this->getAllCategories())
+                'docs' => $this->formatCategories($this->getAllCategories())
             ], 200);
         }
 
-        $maxResults = (int) $request->get('maxResults', Paginator::DEFAULT_MAX_RESULTS);
         $categories = $this->getCategories($page, $maxResults);
 
         if (0 === count($categories)) {
-            return new JsonResponse([
-                'error' => 'Page not found'
-            ], 404);
+            return new ErrorResponse('Page not found', 404);
         }
 
-        return new JsonResponse([
-            'info' => [
+        return new CustomResponse([
+            'paginator' => [
                 'page' => $page,
                 'maxResults' => $maxResults,
                 'results' => count($categories)
             ],
-            'categories' => $this->formatCategories($categories)
+            'docs' => $this->formatCategories($categories)
         ], 200);
     }
 

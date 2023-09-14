@@ -20,8 +20,6 @@ class CustomResponse extends AbstractResponse
 
     public function toJson(): JsonResponse
     {
-        return new JsonResponse([
-            $this->getData()
-        ]);
+        return new JsonResponse($this->getData());
     }
 }
