@@ -110,6 +110,31 @@ class CommentService
         ], 201);
     }
 
+    public function remove(Request $request, int $commentId): JsonResponse
+    {
+        $userToken = $request->headers->get('Authorization');
+
+        $user = $this->authTokenService->loggedInAs($userToken);
+        $notLoggedNotAdminResponse = $this->authTokenService->responseNotLoggedNotAdmin($user);
+
+        if ($notLoggedNotAdminResponse) {
+            return $notLoggedNotAdminResponse;
+        }
+
+        $comment = $this->findById($commentId);
+
+        if (!$comment) {
+            return new JsonResponse([
+                'error' => 'Comment not found'
+            ], 404);
+        }
+
+        $this->entityManager->remove($comment);
+        $this->entityManager->flush();
+
+        return new JsonResponse([], 204);
+    }
+
     private function getComments(int $page = 1, int $maxResults = Paginator::DEFAULT_MAX_RESULTS): array
     {
         if ($page == (-1)) {
