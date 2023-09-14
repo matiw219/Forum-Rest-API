@@ -80,6 +80,23 @@ class CommentService
         ], 200);
     }
 
+    public function getPostComments(int $id): JsonResponse
+    {
+        $post = $this->postService->findById($id);
+
+        if (!$post) {
+            return new JsonResponse([
+                'error' => 'Post not found'
+            ], 404);
+        }
+
+        return new JsonResponse([
+            'post' => $this->postService->formatPost($post),
+            'count' => count($post->getComments()),
+            'comments' => $this->formatComments($post->getComments()->toArray())
+        ], 200);
+    }
+
     public function post(Request $request, int $postId): JsonResponse
     {
         $userToken = $request->headers->get('Authorization');
