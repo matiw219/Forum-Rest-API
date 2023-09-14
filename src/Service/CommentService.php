@@ -2,9 +2,13 @@
 
 namespace App\Service;
 
+use App\Dto\PostDto;
 use App\Entity\Comment;
+use App\Factory\CommentFactory;
+use App\Factory\PostFactory;
 use App\Paginator\Paginator;
 use App\Repository\CommentRepository;
+use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 
@@ -12,7 +16,10 @@ class CommentService
 {
     public function __construct(
         private readonly CommentRepository $commentRepository,
-        private readonly Paginator $paginator
+        private readonly Paginator $paginator,
+        private readonly AuthTokenService $authTokenService,
+        private readonly PostService $postService,
+        private readonly EntityManagerInterface $entityManager
     ) {
     }
 
@@ -55,8 +62,40 @@ class CommentService
     }
 
 
-    public function post(Request $request, int $id): JsonResponse
+    public function post(Request $request, int $postId): JsonResponse
     {
+        $userToken = $request->headers->get('Authorization');
+
+        $user = $this->authTokenService->loggedInAs($userToken);
+        $notLoggedInResponse = $this->authTokenService->responseNotLoggedIn($user);
+
+        if ($notLoggedInResponse) {
+            return $notLoggedInResponse;
+        }
+
+        $post = $this->postService->findById($postId);
+
+        if (!$post) {
+            return new JsonResponse([
+                'error' => 'Post not found'
+            ], 404);
+        }
+
+        $data = json_decode($request->getContent(), true);
+
+        if (empty($data['content'])) {
+            return new JsonResponse([
+                'error' => 'Type comment content'
+            ], 400);
+        }
+
+        $comment = CommentFactory::create($data['content'], $user, $post);
+        $this->entityManager->persist($comment);
+        $this->entityManager->flush();
+
+        return new JsonResponse([
+            'comment' => $this->formatComment($comment)
+        ], 201);
     }
 
     private function getComments(int $page = 1, int $maxResults = Paginator::DEFAULT_MAX_RESULTS): array
