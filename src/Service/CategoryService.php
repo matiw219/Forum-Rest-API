@@ -40,7 +40,7 @@ class CategoryService
                     'results' => $categoriesCount
                 ],
                 'docs' => $this->formatCategories($this->getAllCategories())
-            ], 200);
+            ]);
         }
 
         $categories = $this->getCategories($page, $maxResults);
@@ -56,7 +56,7 @@ class CategoryService
                 'results' => count($categories)
             ],
             'docs' => $this->formatCategories($categories)
-        ], 200);
+        ]);
     }
 
     public function get(int $id): JsonResponse

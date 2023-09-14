@@ -8,7 +8,7 @@ class CustomResponse extends AbstractResponse
 {
     public function __construct(
         private readonly array $data,
-        int $code = 400
+        int $code = 200
     ) {
         parent::__construct($code);
     }
