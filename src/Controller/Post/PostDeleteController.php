@@ -5,6 +5,7 @@ namespace App\Controller\Post;
 use App\Service\PostService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Annotation\Route;
 
 class PostDeleteController extends AbstractController
@@ -15,8 +16,8 @@ class PostDeleteController extends AbstractController
     }
 
     #[Route('/posts/{id}', name: 'delete_post', methods: ['DELETE'])]
-    public function delete(int $id): JsonResponse
+    public function delete(Request $request, int $id): JsonResponse
     {
-        return $this->postService->remove($id);
+        return $this->postService->remove($request, $id);
     }
 }
