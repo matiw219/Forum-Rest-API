@@ -2,10 +2,8 @@
 
 namespace App\Service;
 
-use App\Dto\PostDto;
 use App\Entity\Comment;
 use App\Factory\CommentFactory;
-use App\Factory\PostFactory;
 use App\Paginator\Paginator;
 use App\Repository\CommentRepository;
 use Doctrine\ORM\EntityManagerInterface;
@@ -61,6 +59,20 @@ class CommentService
         ], 200);
     }
 
+    public function get(int $id): JsonResponse
+    {
+        $comment = $this->findById($id);
+
+        if (!$comment) {
+            return new JsonResponse([
+                'error' => 'Comment not found'
+            ], 404);
+        }
+
+        return new JsonResponse([
+            'comment' => $this->formatComment($comment)
+        ], 200);
+    }
 
     public function post(Request $request, int $postId): JsonResponse
     {
