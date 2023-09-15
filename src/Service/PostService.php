@@ -1,19 +1,21 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Service;
 
 use App\Dto\PostDto;
 use App\Dto\PostPatchDto;
-use App\Entity\Category;
 use App\Entity\Comment;
 use App\Entity\Post;
 use App\Factory\PostFactory;
 use App\Paginator\Paginator;
 use App\Repository\PostRepository;
+use App\Response\AbstractResponse;
+use App\Response\CustomResponse;
+use App\Response\ErrorResponse;
 use App\Validation\PostValidator;
 use Doctrine\ORM\EntityManagerInterface;
-use Symfony\Component\HttpFoundation\JsonResponse;
-use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Serializer\SerializerInterface;
 
 class PostService
@@ -30,79 +32,66 @@ class PostService
     ) {
     }
 
-    public function getAll(Request $request): JsonResponse
+    public function getAll(int $page, int $maxResults): AbstractResponse
     {
-        $page = $request->get('page');
 
         if ($page == null) {
             $posts = $this->getAllPosts();
             $postsCount = count($posts);
 
-            return new JsonResponse([
-                'info' => [
+            return new CustomResponse([
+                'paginator' => [
                     'page' => -1,
                     'maxResults' => $postsCount,
                     'results' => $postsCount
                 ],
-                'posts' => $this->formatPosts($posts)
-            ], 200);
+                'docs' => $this->formatPosts($this->getAllPosts())
+            ]);
         }
 
-
-        $maxResults = (int) $request->get('maxResults', Paginator::DEFAULT_MAX_RESULTS);
         $posts = $this->getPosts($page, $maxResults);
 
         if (0 === count($posts)) {
-            return new JsonResponse([
-                'error' => 'Page not found'
-            ], 404);
+            return new ErrorResponse('Page not found', 404);
         }
 
-        return new JsonResponse([
-            'info' => [
-                'page' => (int) $page,
+        return new CustomResponse([
+            'paginator' => [
+                'page' => -1,
                 'maxResults' => $maxResults,
                 'results' => count($posts)
             ],
-            'posts' => $this->formatPosts($posts)
-        ], 200);
+            'docs' => $this->formatPosts($posts)
+        ]);
     }
 
-    public function get(int $id): JsonResponse
+    public function get(int $id): AbstractResponse
     {
         $post = $this->findById($id);
 
         if (!$post) {
-            return new JsonResponse([
-                'error' => 'Post not found'
-            ], 404);
+            return new ErrorResponse('Post not found', 404);
         }
 
-        return new JsonResponse([
-            'post' => $this->formatPost($post)
-        ], 200);
+        return new CustomResponse(['post' => $this->formatPost($post)]);
     }
 
-    public function getCategoryPosts(int $categoryId): JsonResponse
+    public function getCategoryPosts(int $categoryId): AbstractResponse
     {
         $category = $this->categoryService->findById($categoryId);
 
         if (!$category) {
-            return new JsonResponse([
-                'error' => 'Category not found'
-            ], 404);
+            return new ErrorResponse('Category not found', 404);
         }
 
-        return new JsonResponse([
+        return new CustomResponse([
             'category' => $this->categoryService->formatCategory($category),
-            'posts' => $this->formatPosts($category->getPosts()->toArray())
+            'docs' => $this->formatPosts($category->getPosts()->toArray())
         ], 200);
     }
 
-    public function post(Request $request, int $categoryId): JsonResponse
+    public function post(string $userToken, $content, int $categoryId): AbstractResponse
     {
-        $userToken = $request->headers->get('Authorization');
-
         $user = $this->authTokenService->loggedInAs($userToken);
         $notLoggedInResponse = $this->authTokenService->responseNotLoggedIn($user);
 
@@ -113,47 +102,35 @@ class PostService
         $category = $this->categoryService->findById($categoryId);
 
         if (!$category) {
-            return new JsonResponse([
-                'error' => 'Category not found'
-            ], 404);
+            return new ErrorResponse('Category not found', 404);
         }
 
-        $data = json_decode($request->getContent(), true);
+        $data = json_decode($content, true);
 
         if (empty($data['title'])) {
-            return new JsonResponse([
-                'error' => 'Type post title'
-            ], 400);
+            return new ErrorResponse('Post title is required', 400);
         }
 
         if (empty($data['content'])) {
-            return new JsonResponse([
-                'error' => 'Type post content'
-            ], 400);
+            return new ErrorResponse('Post content is required', 400);
         }
 
-        $postDto = $this->serializer->deserialize($request->getContent(), PostDto::class, 'json');
+        $postDto = $this->serializer->deserialize($content, PostDto::class, 'json');
         $this->postValidator->validate($postDto);
 
         if ($this->postValidator->hasErrors()) {
-            return new JsonResponse([
-                'error' => $this->postValidator->getErrors()[0],
-            ], $this->postValidator->getCode());
+            return new ErrorResponse($this->postValidator->getErrors()[0], $this->postValidator->getCode());
         }
 
         $post = PostFactory::create($postDto, $user, $category);
         $this->entityManager->persist($post);
         $this->entityManager->flush();
 
-        return new JsonResponse([
-            'post' => $this->formatPost($post)
-        ], 201);
+        return new CustomResponse(['post' => $this->formatPost($post)], 201);
     }
 
-    public function remove(Request $request, int $id): JsonResponse
+    public function remove(string $userToken, int $id): AbstractResponse
     {
-        $userToken = $request->headers->get('Authorization');
-
         $user = $this->authTokenService->loggedInAs($userToken);
         $notLoggedNotAdminResponse = $this->authTokenService->responseNotLoggedNotAdmin($user);
 
@@ -164,9 +141,7 @@ class PostService
         $post = $this->findById($id);
 
         if (!$post) {
-            return new JsonResponse([
-                'error' => 'Post not found'
-            ], 404);
+            return new ErrorResponse('Post not found', 404);
         }
 
         /** @var Comment $comment */
@@ -178,13 +153,11 @@ class PostService
         $this->entityManager->remove($post);
         $this->entityManager->flush();
 
-        return new JsonResponse([], 204);
+        return new CustomResponse([], 204);
     }
 
-    public function patch(Request $request): JsonResponse
+    public function patch(string $userToken, $content): AbstractResponse
     {
-        $userToken = $request->headers->get('Authorization');
-
         $user = $this->authTokenService->loggedInAs($userToken);
         $notLoggedNotAdminResponse = $this->authTokenService->responseNotLoggedNotAdmin($user);
 
@@ -192,31 +165,25 @@ class PostService
             return $notLoggedNotAdminResponse;
         }
 
-        $data = json_decode($request->getContent(), true);
+        $data = json_decode($content, true);
 
         if (empty($data['id'])) {
-            return new JsonResponse([
-                'error' => 'Enter a post id'
-            ], 400);
+            return new ErrorResponse('Post id is required', 400);
         }
 
         /** @var PostPatchDto $postPatchDto */
-        $postPatchDto = $this->serializer->deserialize($request->getContent(), PostPatchDto::class, 'json');
+        $postPatchDto = $this->serializer->deserialize($content, PostPatchDto::class, 'json');
         $post = $this->findById($postPatchDto->getId());
 
         if (!$post) {
-            return new JsonResponse([
-                'error' => 'Post does not exists'
-            ], 404);
+            return new ErrorResponse('Post not found', 404);
         }
 
         if ($postPatchDto->getCreatedBy()) {
             $newCreator = $this->userService->findUserById($postPatchDto->getCreatedBy());
 
             if (!$newCreator) {
-                return new JsonResponse([
-                    'error' => 'New creator does not exists'
-                ], 404);
+                return new ErrorResponse('New creator not found', 404);
             }
 
             $post->setCreatedBy($newCreator);
@@ -226,9 +193,7 @@ class PostService
             $category = $this->categoryService->findById($postPatchDto->getCategory());
 
             if (!$category) {
-                return new JsonResponse([
-                    'error' => 'New category does not exists'
-                ], 404);
+                return new ErrorResponse('New category not found', 404);
             }
 
             $post->setCategory($category);
@@ -237,9 +202,7 @@ class PostService
         PostFactory::patchPost($post, $postPatchDto);
         $this->entityManager->flush();
 
-        return new JsonResponse([
-            'post' => $this->formatPost($post)
-        ], 202);
+        return new CustomResponse(['post' => $this->formatPost($post)], 202);
     }
 
     private function getPosts(int $page = 1, int $maxResults = Paginator::DEFAULT_MAX_RESULTS): array

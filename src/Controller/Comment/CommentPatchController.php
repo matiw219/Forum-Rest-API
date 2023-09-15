@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Controller\Comment;
 
 use App\Service\CommentService;
@@ -18,6 +20,9 @@ class CommentPatchController extends AbstractController
     #[Route('/comments', name: 'patch_comment', methods: ['PATCH'])]
     public function patch(Request $request): JsonResponse
     {
-        return $this->commentService->patch($request);
+        $userToken = $request->headers->get('Authorization');
+        $content = $request->getContent();
+
+        return $this->commentService->patch($userToken, $content)->toJson();
     }
 }

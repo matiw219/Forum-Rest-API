@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Response;
 
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -25,6 +27,6 @@ class ErrorResponse extends AbstractResponse
                 'code' => $this->getCode(),
                 'message' => $this->getError()
             ]
-        ]);
+        ], $this->getCode());
     }
 }

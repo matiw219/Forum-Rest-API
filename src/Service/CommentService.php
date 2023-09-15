@@ -1,17 +1,18 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Service;
 
 use App\Dto\CommentPatchDto;
-use App\Dto\PostPatchDto;
 use App\Entity\Comment;
 use App\Factory\CommentFactory;
-use App\Factory\PostFactory;
 use App\Paginator\Paginator;
 use App\Repository\CommentRepository;
+use App\Response\AbstractResponse;
+use App\Response\CustomResponse;
+use App\Response\ErrorResponse;
 use Doctrine\ORM\EntityManagerInterface;
-use Symfony\Component\HttpFoundation\JsonResponse;
-use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Serializer\SerializerInterface;
 
 class CommentService
@@ -27,80 +28,66 @@ class CommentService
     ) {
     }
 
-    public function getAll(Request $request): JsonResponse
+    public function getAll(int $page, int $maxResults): AbstractResponse
     {
-        $page = $request->get('page');
-
         if ($page == null) {
             $comments = $this->getAllComments();
             $commentsCount = count($comments);
 
-            return new JsonResponse([
-                'info' => [
+            return new CustomResponse([
+                'paginator' => [
                     'page' => -1,
                     'maxResults' => $commentsCount,
                     'results' => $commentsCount
                 ],
-                'comments' => $this->formatComments($comments)
-            ], 200);
+                'docs' => $this->formatComments($this->getAllComments())
+            ]);
         }
 
-
-        $maxResults = (int) $request->get('maxResults', Paginator::DEFAULT_MAX_RESULTS);
         $comments = $this->getComments($page, $maxResults);
 
         if (0 === count($comments)) {
-            return new JsonResponse([
-                'error' => 'Page not found'
-            ], 404);
+            return new ErrorResponse('Page not found', 404);
         }
 
-        return new JsonResponse([
-            'info' => [
-                'page' => (int) $page,
+        return new CustomResponse([
+            'paginator' => [
+                'page' => -1,
                 'maxResults' => $maxResults,
                 'results' => count($comments)
             ],
-            'comments' => $this->formatComments($comments)
-        ], 200);
+            'docs' => $this->formatComments($this->getAllComments())
+        ]);
     }
 
-    public function get(int $id): JsonResponse
+    public function get(int $id): AbstractResponse
     {
         $comment = $this->findById($id);
 
         if (!$comment) {
-            return new JsonResponse([
-                'error' => 'Comment not found'
-            ], 404);
+            return new ErrorResponse('Comment not found', 404);
         }
-
-        return new JsonResponse([
+        return new CustomResponse([
             'comment' => $this->formatComment($comment)
-        ], 200);
+        ]);
     }
 
-    public function getPostComments(int $id): JsonResponse
+    public function getPostComments(int $id): AbstractResponse
     {
         $post = $this->postService->findById($id);
 
         if (!$post) {
-            return new JsonResponse([
-                'error' => 'Post not found'
-            ], 404);
+            return new ErrorResponse('Post not found', 404);
         }
 
-        return new JsonResponse([
+        return new CustomResponse([
             'post' => $this->postService->formatPost($post),
-            'count' => count($post->getComments()),
-            'comments' => $this->formatComments($post->getComments()->toArray())
-        ], 200);
+            'docs' => $this->formatComments($post->getComments()->toArray())
+        ]);
     }
 
-    public function post(Request $request, int $postId): JsonResponse
+    public function post(string $userToken, $content, int $postId): AbstractResponse
     {
-        $userToken = $request->headers->get('Authorization');
-
         $user = $this->authTokenService->loggedInAs($userToken);
         $notLoggedInResponse = $this->authTokenService->responseNotLoggedIn($user);
 
@@ -111,32 +98,24 @@ class CommentService
         $post = $this->postService->findById($postId);
 
         if (!$post) {
-            return new JsonResponse([
-                'error' => 'Post not found'
-            ], 404);
+            return new ErrorResponse('Post not found', 404);
         }
 
-        $data = json_decode($request->getContent(), true);
+        $data = json_decode($content, true);
 
         if (empty($data['content'])) {
-            return new JsonResponse([
-                'error' => 'Type comment content'
-            ], 400);
+            return new ErrorResponse('Post content is required', 400);
         }
 
         $comment = CommentFactory::create($data['content'], $user, $post);
         $this->entityManager->persist($comment);
         $this->entityManager->flush();
 
-        return new JsonResponse([
-            'comment' => $this->formatComment($comment)
-        ], 201);
+        return new CustomResponse(['comment' => $this->formatComment($comment)]);
     }
 
-    public function patch(Request $request): JsonResponse
+    public function patch(string $userToken, $content): AbstractResponse
     {
-        $userToken = $request->headers->get('Authorization');
-
         $user = $this->authTokenService->loggedInAs($userToken);
         $notLoggedNotAdminResponse = $this->authTokenService->responseNotLoggedNotAdmin($user);
 
@@ -144,31 +123,25 @@ class CommentService
             return $notLoggedNotAdminResponse;
         }
 
-        $data = json_decode($request->getContent(), true);
+        $data = json_decode($content, true);
 
         if (empty($data['id'])) {
-            return new JsonResponse([
-                'error' => 'Enter a comment id'
-            ], 400);
+            return new ErrorResponse('Comment id is required', 400);
         }
 
         /** @var CommentPatchDto $commentPatchDto */
-        $commentPatchDto = $this->serializer->deserialize($request->getContent(), CommentPatchDto::class, 'json');
+        $commentPatchDto = $this->serializer->deserialize($content, CommentPatchDto::class, 'json');
         $comment = $this->findById($commentPatchDto->getId());
 
         if (!$comment) {
-            return new JsonResponse([
-                'error' => 'Comment does not exists'
-            ], 404);
+            return new ErrorResponse('Comment not found', 404);
         }
 
         if ($commentPatchDto->getCreatedBy()) {
             $newCreator = $this->userService->findUserById($commentPatchDto->getCreatedBy());
 
             if (!$newCreator) {
-                return new JsonResponse([
-                    'error' => 'New creator does not exists'
-                ], 404);
+                return new ErrorResponse('New creator not found', 404);
             }
 
             $comment->setCreatedBy($newCreator);
@@ -178,9 +151,7 @@ class CommentService
             $newPost = $this->postService->findById($commentPatchDto->getId());
 
             if (!$newPost) {
-                return new JsonResponse([
-                    'error' => 'New post does not exists'
-                ], 404);
+                return new ErrorResponse('New post not found', 404);
             }
 
             $comment->setPost($newPost);
@@ -191,16 +162,11 @@ class CommentService
         }
 
         $this->entityManager->flush();
-
-        return new JsonResponse([
-            'comment' => $this->formatComment($comment)
-        ], 202);
+        return new CustomResponse(['comment' => $this->formatComment($comment)]);
     }
 
-    public function remove(Request $request, int $commentId): JsonResponse
+    public function remove(string $userToken, int $commentId): AbstractResponse
     {
-        $userToken = $request->headers->get('Authorization');
-
         $user = $this->authTokenService->loggedInAs($userToken);
         $notLoggedNotAdminResponse = $this->authTokenService->responseNotLoggedNotAdmin($user);
 
@@ -211,15 +177,13 @@ class CommentService
         $comment = $this->findById($commentId);
 
         if (!$comment) {
-            return new JsonResponse([
-                'error' => 'Comment not found'
-            ], 404);
+            return new ErrorResponse('Comment not found', 404);
         }
 
         $this->entityManager->remove($comment);
         $this->entityManager->flush();
 
-        return new JsonResponse([], 204);
+        return new CustomResponse([], 204);
     }
 
     private function getComments(int $page = 1, int $maxResults = Paginator::DEFAULT_MAX_RESULTS): array

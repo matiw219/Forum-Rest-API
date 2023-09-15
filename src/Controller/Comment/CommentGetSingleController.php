@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Controller\Comment;
 
 use App\Service\CommentService;
@@ -17,6 +19,6 @@ class CommentGetSingleController extends AbstractController
     #[Route('/comments/{id}', name: 'get_comment', methods: ['GET'])]
     public function getSingle(int $id): JsonResponse
     {
-        return $this->commentService->get($id);
+        return $this->commentService->get($id)->toJson();
     }
 }

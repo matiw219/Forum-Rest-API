@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Controller\Comment;
 
 use App\Service\CommentService;
@@ -18,6 +20,8 @@ class CommentDeleteController extends AbstractController
     #[Route('/comments/{id}', name: 'delete_comment', methods: ['DELETE'])]
     public function delete(Request $request, int $id): JsonResponse
     {
-        return $this->commentService->remove($request, $id);
+        $userToken = $request->headers->get('Authorization');
+
+        return $this->commentService->remove($userToken, $id)->toJson();
     }
 }

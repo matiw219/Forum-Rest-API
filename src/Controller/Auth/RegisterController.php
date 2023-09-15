@@ -13,13 +13,13 @@ use Symfony\Component\Routing\Annotation\Route;
 class RegisterController extends AbstractController
 {
     public function __construct(
-        private RegistrationService $registrationService,
+        private readonly RegistrationService $registrationService,
     ) {
     }
 
     #[Route('/auth/register', name: 'app_auth_register', methods: ['POST'])]
     public function index(Request $request): JsonResponse
     {
-        return $this->registrationService->register($request);
+        return $this->registrationService->register($request->getContent())->toJson();
     }
 }

@@ -19,6 +19,6 @@ class PostGetCommentsController extends AbstractController
     #[Route('/posts/{id}/comments', name: 'get_post_comments', methods: ['GET'])]
     public function comments(int $id): JsonResponse
     {
-        return $this->commentService->getPostComments($id);
+        return $this->commentService->getPostComments($id)->toJson();
     }
 }

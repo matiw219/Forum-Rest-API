@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Controller\Post;
 
 use App\Service\PostService;
@@ -18,6 +20,9 @@ class PostPatchController extends AbstractController
     #[Route('/posts', name: 'patch_post', methods: ['PATCH'])]
     public function patch(Request $request): JsonResponse
     {
-        return $this->postService->patch($request);
+        $userToken = $request->headers->get('Authorization');
+        $content = $request->getContent();
+
+        return $this->postService->patch($userToken, $content)->toJson();
     }
 }

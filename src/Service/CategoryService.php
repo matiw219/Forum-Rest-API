@@ -13,8 +13,6 @@ use App\Response\AbstractResponse;
 use App\Response\CustomResponse;
 use App\Response\ErrorResponse;
 use Doctrine\ORM\EntityManagerInterface;
-use Symfony\Component\HttpFoundation\JsonResponse;
-use Symfony\Component\HttpFoundation\Request;
 
 class CategoryService
 {
@@ -59,25 +57,19 @@ class CategoryService
         ]);
     }
 
-    public function get(int $id): JsonResponse
+    public function get(int $id): AbstractResponse
     {
         $category = $this->categoryRepository->find($id);
 
         if (!$category) {
-            return new JsonResponse([
-                'error' => 'Category not found'
-            ], 404);
+            return new ErrorResponse('Category not found', 404);
         }
 
-        return new JsonResponse([
-            'category' => $this->formatCategory($category)
-        ]);
+        return new CustomResponse(['category' => $this->formatCategory($category)]);
     }
 
-    public function post(Request $request): JsonResponse
+    public function post(string $userToken, $content): AbstractResponse
     {
-        $userToken = $request->headers->get('Authorization');
-
         $user = $this->authTokenService->loggedInAs($userToken);
         $notLoggedNotAdminResponse = $this->authTokenService->responseNotLoggedNotAdmin($user);
 
@@ -85,12 +77,10 @@ class CategoryService
             return $notLoggedNotAdminResponse;
         }
 
-        $data = json_decode($request->getContent(), true);
+        $data = json_decode($content, true);
 
         if (empty($data['name'])) {
-            return new JsonResponse([
-                'error' => 'Enter a category name'
-            ], 400);
+            return new ErrorResponse('Category name not found', 400);
         }
 
         $name = $data['name'];
@@ -103,9 +93,7 @@ class CategoryService
         $category = $this->categoryRepository->findOneBy(['name' => $name]);
 
         if ($category) {
-            return new JsonResponse([
-                'error' => 'Category with this name already exists'
-            ], 302);
+            return new ErrorResponse('Category with this name already exists');
         }
 
         $parent = null;
@@ -114,15 +102,11 @@ class CategoryService
             $parent = $this->categoryRepository->find($parentId);
 
             if (!$parent) {
-                return new JsonResponse([
-                    'error' => 'Typed parent does not exists'
-                ], 404);
+                return new ErrorResponse('Parent category not found', 404);
             }
 
             if ($parent->getParent()) {
-                return new JsonResponse([
-                    'error' => 'The given category is already a child of another parent'
-                ], 302);
+                return new ErrorResponse('Parent category is already a child of another category');
             }
         }
 
@@ -130,15 +114,11 @@ class CategoryService
         $this->entityManager->persist($category);
         $this->entityManager->flush();
 
-        return new JsonResponse([
-            'category' => $this->formatCategory($category)
-        ], 201);
+        return new CustomResponse(['category' => $this->formatCategory($category)], 201);
     }
 
-    public function patch(Request $request): JsonResponse
+    public function patch(string $userToken, $content): AbstractResponse
     {
-        $userToken = $request->headers->get('Authorization');
-
         $user = $this->authTokenService->loggedInAs($userToken);
         $notLoggedNotAdminResponse = $this->authTokenService->responseNotLoggedNotAdmin($user);
 
@@ -146,20 +126,16 @@ class CategoryService
             return $notLoggedNotAdminResponse;
         }
 
-        $data = json_decode($request->getContent(), true);
+        $data = json_decode($content, true);
 
         if (empty($data['id'])) {
-            return new JsonResponse([
-                'error' => 'Enter a category id'
-            ], 400);
+            return new ErrorResponse('Category id not found', 400);
         }
 
         $category = $this->categoryRepository->find($data['id']);
 
         if (!$category) {
-            return new JsonResponse([
-                'error' => 'Category does not exists'
-            ], 404);
+            return new ErrorResponse('Category not found', 404);
         }
 
         $name = null;
@@ -179,18 +155,14 @@ class CategoryService
         }
 
         if (!$name && !$parentId && !$createdById) {
-            return new JsonResponse([
-                'error' => 'No data has been sent for update'
-            ], 400);
+            return new ErrorResponse('No data has been sent for update', 400);
         }
 
         if ($parentId) {
             $newParent = $this->categoryRepository->find($parentId);
 
             if (!$newParent) {
-                return new JsonResponse([
-                    'error' => 'Parent category does not exists'
-                ], 400);
+                return new ErrorResponse('Parent category not found', 404);
             }
 
             $category->setParent($newParent);
@@ -202,9 +174,7 @@ class CategoryService
             $createdBy = $this->userService->findUserById($createdById);
 
             if (!$createdBy) {
-                return new JsonResponse([
-                    'error' => 'Creator does does not exists'
-                ], 400);
+                return new ErrorResponse('New creator not found', 404);
             }
 
             $category->setCreatedBy($createdBy);
@@ -216,9 +186,7 @@ class CategoryService
             $searchCategory = $this->categoryRepository->findOneBy(['name' => $name]);
 
             if ($searchCategory) {
-                return new JsonResponse([
-                    'error' => 'Category with this name already exists'
-                ], 302);
+                return new ErrorResponse('Category with this name already exists', 302);
             }
 
             $category->setName($name);
@@ -226,15 +194,11 @@ class CategoryService
 
         $this->entityManager->flush();
 
-        return new JsonResponse([
-            'category' => $this->formatCategory($category)
-        ], 202);
+        return new CustomResponse(['category' => $this->formatCategory($category)], 202);
     }
 
-    public function remove(Request $request, int $id): JsonResponse
+    public function remove(string $userToken, int $id): AbstractResponse
     {
-        $userToken = $request->headers->get('Authorization');
-
         $user = $this->authTokenService->loggedInAs($userToken);
         $notLoggedNotAdminResponse = $this->authTokenService->responseNotLoggedNotAdmin($user);
 
@@ -245,9 +209,7 @@ class CategoryService
         $category = $this->categoryRepository->find($id);
 
         if (!$category) {
-            return new JsonResponse([
-                'error' => 'Category not found'
-            ], 404);
+            return new ErrorResponse('Category not found', 404);
         }
 
         /** @var Category $child */
@@ -258,7 +220,7 @@ class CategoryService
         $this->entityManager->remove($category);
         $this->entityManager->flush();
 
-        return new JsonResponse([], 204);
+        return new CustomResponse([], 204);
     }
 
     private function getCategories(int $page = 1, int $maxResults = Paginator::DEFAULT_MAX_RESULTS): array
@@ -301,7 +263,7 @@ class CategoryService
             'name' => $category->getName(),
             'createdAt' => $category->getCreatedAt(),
             'createdBy' => ($category->getCreatedBy()?->getId()),
-            'parent_id' => ($category->getParent()?->getId()),
+            'parent' => ($category->getParent()?->getId()),
             'children' => $children,
             'posts' => $posts
         ];

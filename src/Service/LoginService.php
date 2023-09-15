@@ -6,34 +6,35 @@ namespace App\Service;
 
 use App\Dto\LoginDto;
 use App\Repository\UserRepository;
+use App\Response\AbstractResponse;
+use App\Response\CustomResponse;
+use App\Response\ErrorResponse;
 use App\Validation\LoginValidator;
 use Doctrine\ORM\NonUniqueResultException;
 use Psr\Log\LoggerInterface;
-use Symfony\Component\HttpFoundation\JsonResponse;
-use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Serializer\SerializerInterface;
 
 class LoginService
 {
     public function __construct(
-        private UserRepository $userRepository,
-        private AuthTokenService $tokenService,
-        private LoggerInterface $logger,
-        private LoginValidator $loginValidator,
-        private SerializerInterface $serializer
+        private readonly UserRepository $userRepository,
+        private readonly AuthTokenService $tokenService,
+        private readonly LoggerInterface $logger,
+        private readonly LoginValidator $loginValidator,
+        private readonly SerializerInterface $serializer
     ) {
     }
 
-    public function login(Request $request): JsonResponse
+    public function login($content): AbstractResponse
     {
-        $data = json_decode($request->getContent(), true);
+        $data = json_decode($content, true);
 
         if (empty($data['user'])) {
-            return new JsonResponse(['error' => 'Please enter your username or email'], 400);
+            return new ErrorResponse('User is required', 400);
         }
 
         if (empty($data['password'])) {
-            return new JsonResponse(['error' => 'Please enter your password'], 400);
+            return new ErrorResponse('Password is required', 400);
         }
 
         $user = null;
@@ -42,22 +43,24 @@ class LoginService
             $user = $this->userRepository->findUserByUsernameOrEmail($data['user']);
         } catch (NonUniqueResultException $exception) {
             $this->logger->error('An error occurred while searching for the user: ' . $exception->getMessage());
-            return new JsonResponse(['error' => 'An unexpected error occurred'], 500);
+
+            return new ErrorResponse('An unexpected error occurred', 500);
         }
 
-        $loginDto = $this->serializer->deserialize($request->getContent(), LoginDto::class, 'json');
+        $loginDto = $this->serializer->deserialize($content, LoginDto::class, 'json');
         $this->loginValidator->setUser($user);
         $this->loginValidator->validate($loginDto);
 
         if ($this->loginValidator->hasErrors()) {
-            return new JsonResponse(['error' => $this->loginValidator->getErrors()], $this->loginValidator->getCode());
+            return new ErrorResponse($this->loginValidator->getErrors()[0], $this->loginValidator->getCode());
         }
 
         $token = $this->tokenService->createNewToken($user);
 
-        return new JsonResponse(
+        return new CustomResponse(
             [
                 'token' => $token->getHash(),
+                'user_id' => $token->getUser()->getId(),
                 'user' => $token->getUser()->getUsername(),
                 'createdAt' => $token->getCreatedAt(),
                 'expiresAt' => $token->getExpiresAt()

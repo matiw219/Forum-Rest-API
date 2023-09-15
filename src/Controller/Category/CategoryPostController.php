@@ -20,6 +20,9 @@ class CategoryPostController extends AbstractController
     #[Route('/categories', name: 'post_category', methods: ['POST'])]
     public function post(Request $request): JsonResponse
     {
-        return $this->categoryService->post($request);
+        $userToken = $request->headers->get('Authorization');
+        $content = $request->getContent();
+
+        return $this->categoryService->post($userToken, $content)->toJson();
     }
 }

@@ -19,6 +19,6 @@ class CategoryGetSingleController extends AbstractController
     #[Route('/categories/{id}', name: 'get_category', methods: ['GET'])]
     public function getSingle(int $id): JsonResponse
     {
-        return $this->categoryService->get($id);
+        return $this->categoryService->get($id)->toJson();
     }
 }

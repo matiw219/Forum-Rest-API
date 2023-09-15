@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Controller\Category\Post;
 
 use App\Service\PostService;
@@ -18,6 +20,9 @@ class CategoryPostPostController extends AbstractController
     #[Route('/categories/{id}/posts', name: 'post_post', methods: ['POST'])]
     public function index(Request $request, int $id): JsonResponse
     {
-        return $this->postService->post($request, $id);
+        $userToken = $request->headers->get('Authorization');
+        $content = $request->getContent();
+
+        return $this->postService->post($userToken, $content, $id)->toJson();
     }
 }

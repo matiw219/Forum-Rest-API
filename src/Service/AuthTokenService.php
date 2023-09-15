@@ -9,14 +9,15 @@ use App\Entity\AuthToken;
 use App\Entity\User;
 use App\Factory\AuthTokenFactory;
 use App\Repository\AuthTokenRepository;
+use App\Response\AbstractResponse;
+use App\Response\ErrorResponse;
 use Doctrine\ORM\EntityManagerInterface;
-use Symfony\Component\HttpFoundation\JsonResponse;
 
 class AuthTokenService
 {
     public function __construct(
-        private AuthTokenRepository $tokenRepository,
-        private EntityManagerInterface $entityManager,
+        private readonly AuthTokenRepository $tokenRepository,
+        private readonly EntityManagerInterface $entityManager,
     ) {
     }
 
@@ -82,28 +83,24 @@ class AuthTokenService
         }
     }
 
-    public function responseNotLoggedIn(?User $user): ?JsonResponse
+    public function responseNotLoggedIn(?User $user): ?AbstractResponse
     {
         if (!$user) {
-            return new JsonResponse([
-                'error' => 'You`re not logged in'
-            ], 401);
+            return new ErrorResponse('You`re not logged in', 401);
         }
         return null;
     }
 
-    public function responseNotAdmin(User $user): ?JsonResponse
+    public function responseNotAdmin(User $user): ?AbstractResponse
     {
         if (!BetterArray::fromArray($user->getRoles())->contains('ROLE_ADMIN')) {
-            return new JsonResponse([
-                'error' => 'No permission'
-            ], 403);
+            return new ErrorResponse('No permission', 403);
         }
 
         return null;
     }
 
-    public function responseNotLoggedNotAdmin(?User $user): ?JsonResponse
+    public function responseNotLoggedNotAdmin(?User $user): ?AbstractResponse
     {
         $responseNotLoggedIn = $this->responseNotLoggedIn($user);
 

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Controller\Post\Comment;
 
 use App\Service\CommentService;
@@ -18,6 +20,9 @@ class PostPostCommentController extends AbstractController
     #[Route('/posts/{id}/comments', name: 'post_comment', methods: ['POST'])]
     public function index(Request $request, int $id): JsonResponse
     {
-        return $this->commentService->post($request, $id);
+        $userToken = $request->headers->get('Authorization');
+        $content = $request->getContent();
+
+        return $this->commentService->post($userToken, $content, $id)->toJson();
     }
 }

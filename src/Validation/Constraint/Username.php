@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Validation\Constraint;
 
 use App\Validation\Validator\UsernameValidator;

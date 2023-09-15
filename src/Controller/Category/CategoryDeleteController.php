@@ -20,6 +20,8 @@ class CategoryDeleteController extends AbstractController
     #[Route('/categories/{id}', name: 'category_delete', methods: ['DELETE'])]
     public function delete(Request $request, int $id): JsonResponse
     {
-        return $this->categoryService->remove($request, $id);
+        $userToken = $request->headers->get('Authorization');
+
+        return $this->categoryService->remove($userToken, $id)->toJson();
     }
 }

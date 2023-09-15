@@ -17,6 +17,6 @@ class PostGetSingleController extends AbstractController
     #[Route('/posts/{id}', name: 'get_post', methods: ['GET'])]
     public function getSingle(int $id): JsonResponse
     {
-        return $this->postService->get($id);
+        return $this->postService->get($id)->toJson();
     }
 }

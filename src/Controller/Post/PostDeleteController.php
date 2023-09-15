@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Controller\Post;
 
 use App\Service\PostService;
@@ -18,6 +20,8 @@ class PostDeleteController extends AbstractController
     #[Route('/posts/{id}', name: 'delete_post', methods: ['DELETE'])]
     public function delete(Request $request, int $id): JsonResponse
     {
-        return $this->postService->remove($request, $id);
+        $userToken = $request->headers->get('Authorization');
+
+        return $this->postService->remove($userToken, $id)->toJson();
     }
 }

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Response;
 
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -20,6 +22,6 @@ class CustomResponse extends AbstractResponse
 
     public function toJson(): JsonResponse
     {
-        return new JsonResponse($this->getData());
+        return new JsonResponse($this->getData(), $this->getCode());
     }
 }

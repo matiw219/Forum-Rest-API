@@ -20,6 +20,6 @@ class LoginController extends AbstractController
     #[Route('/auth/login', name: 'app_auth_login', methods: ['POST'])]
     public function index(Request $request): JsonResponse
     {
-        return $this->loginService->login($request);
+        return $this->loginService->login($request->getContent())->toJson();
     }
 }

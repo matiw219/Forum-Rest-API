@@ -19,6 +19,6 @@ class CategoryGetPostsController extends AbstractController
     #[Route('/categories/{id}/posts', name: 'get_category_posts', methods: ['GET'])]
     public function posts(int $id): JsonResponse
     {
-        return $this->postService->getCategoryPosts($id);
+        return $this->postService->getCategoryPosts($id)->toJson();
     }
 }

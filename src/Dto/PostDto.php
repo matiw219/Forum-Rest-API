@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Dto;
 
 class PostDto
@@ -19,5 +21,4 @@ class PostDto
     {
         return $this->content;
     }
-
 }

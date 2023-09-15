@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Controller\Post;
 
-use App\Service\CategoryService;
+use App\Paginator\Paginator;
 use App\Service\PostService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -21,6 +21,9 @@ class PostGetListController extends AbstractController
     #[Route('/posts', name: 'post_list', methods: ['GET'])]
     public function list(Request $request): JsonResponse
     {
-        return $this->postService->getAll($request);
+        $page = $request->get('page');
+        $maxResults = (int) $request->get('maxResults', Paginator::DEFAULT_MAX_RESULTS);
+
+        return $this->postService->getAll($page, $maxResults)->toJson();
     }
 }

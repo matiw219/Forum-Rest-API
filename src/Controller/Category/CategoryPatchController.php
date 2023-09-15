@@ -20,6 +20,9 @@ class CategoryPatchController extends AbstractController
     #[Route('/categories', name: 'patch_category', methods: ['PATCH'])]
     public function patch(Request $request): JsonResponse
     {
-        return $this->categoryService->patch($request);
+        $userToken = $request->headers->get('Authorization');
+        $content = $request->getContent();
+
+        return $this->categoryService->patch($userToken, $content)->toJson();
     }
 }
