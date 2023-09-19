@@ -10,14 +10,17 @@ use App\Entity\User;
 use App\Factory\AuthTokenFactory;
 use App\Repository\AuthTokenRepository;
 use App\Response\AbstractResponse;
+use App\Response\CustomResponse;
 use App\Response\ErrorResponse;
 use Doctrine\ORM\EntityManagerInterface;
+use Doctrine\ORM\NonUniqueResultException;
 
 class AuthTokenService
 {
     public function __construct(
         private readonly AuthTokenRepository $tokenRepository,
         private readonly EntityManagerInterface $entityManager,
+        private readonly UserService $userService,
     ) {
     }
 
@@ -50,6 +53,7 @@ class AuthTokenService
 
         return null;
     }
+
 
     public function createNewToken(User $user): AuthToken
     {
@@ -115,5 +119,68 @@ class AuthTokenService
         }
 
         return null;
+    }
+
+    public function getToken(int $id, string $hash): ?AuthToken
+    {
+        $user = $this->userService->findUserById($id);
+
+        if (!$user) {
+            return null;
+        }
+
+        $qb = $this->tokenRepository->createQueryBuilder('a');
+
+        try {
+            return $qb->where('a.hash = :hash')
+                ->andWhere('a.user = :user')
+                ->setParameter('hash', $hash)
+                ->setParameter('user', $user)
+                ->getQuery()
+                ->getOneOrNullResult();
+        } catch (NonUniqueResultException $e) {
+        }
+        return null;
+    }
+
+    public function session(?int $userId, ?string $hash): AbstractResponse
+    {
+        if (!$userId) {
+            return new ErrorResponse('Bad request', 400);
+        }
+
+        if (!$hash) {
+            return new ErrorResponse('Bad request', 400);
+        }
+
+        $token = $this->getToken($userId, $hash);
+
+        if (!$token) {
+            return new CustomResponse([
+                'status' => 0
+            ], 401);
+        }
+
+        if ($token->getExpiresAt() > $token->getCreatedAt()) {
+            return new CustomResponse([
+                'status' => 2,
+            ], 401);
+        }
+
+        return new CustomResponse([
+            'status' => 1,
+            'token' => [
+                'hash' => $token->getHash(),
+                'user_id' => $token->getUser()->getId(),
+                'user' => $token->getUser()->getUsername(),
+                'email' => $token->getUser()->getEmail(),
+                'numberPhone' => $token->getUser()->getNumberPhone(),
+                'country' => $token->getUser()->getCountry(),
+                'state' => $token->getUser()->getState(),
+                'joinAt' => $token->getUser()->getCreatedAt(),
+                'createdAt' => $token->getCreatedAt(),
+                'expiresAt' => $token->getExpiresAt()
+            ]
+        ], 200);
     }
 }
