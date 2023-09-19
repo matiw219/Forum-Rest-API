@@ -161,7 +161,9 @@ class AuthTokenService
             ], 401);
         }
 
-        if ($token->getExpiresAt() > $token->getCreatedAt()) {
+        $now = new \DateTimeImmutable();
+        if ($token->getExpiresAt() < $now) {
+            $this->deleteOldToken($token->getUser());
             return new CustomResponse([
                 'status' => 2,
             ], 401);
@@ -169,15 +171,17 @@ class AuthTokenService
 
         return new CustomResponse([
             'status' => 1,
-            'token' => [
-                'hash' => $token->getHash(),
+            'user' => [
                 'user_id' => $token->getUser()->getId(),
                 'user' => $token->getUser()->getUsername(),
                 'email' => $token->getUser()->getEmail(),
                 'numberPhone' => $token->getUser()->getNumberPhone(),
                 'country' => $token->getUser()->getCountry(),
                 'state' => $token->getUser()->getState(),
-                'joinAt' => $token->getUser()->getCreatedAt(),
+                'createdAt' => $token->getUser()->getCreatedAt(),
+            ],
+            'token' => [
+                'hash' => $token->getHash(),
                 'createdAt' => $token->getCreatedAt(),
                 'expiresAt' => $token->getExpiresAt()
             ]
