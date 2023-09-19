@@ -27,7 +27,7 @@ class RegistrationValidator extends AbstractValidator
 
         if (!empty($violations)) {
             $this->addError($violations[0]);
-            $this->setCode(400);
+            $this->setCode(403);
             return;
         }
 
@@ -35,7 +35,7 @@ class RegistrationValidator extends AbstractValidator
 
         if ($user) {
             $this->addError('A user with this email already exists');
-            $this->setCode(400);
+            $this->setCode(403);
             return;
         }
 
@@ -43,7 +43,7 @@ class RegistrationValidator extends AbstractValidator
 
         if ($user) {
             $this->addError('A user with this username already exists');
-            $this->setCode(400);
+            $this->setCode(403);
         }
     }
 }

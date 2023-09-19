@@ -32,7 +32,7 @@ class PostService
     ) {
     }
 
-    public function getAll(int $page, int $maxResults): AbstractResponse
+    public function getAll(?int $page, ?int $maxResults): AbstractResponse
     {
 
         if ($page == null) {

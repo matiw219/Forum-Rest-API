@@ -57,14 +57,12 @@ class LoginService
 
         $token = $this->tokenService->createNewToken($user);
 
-        return new CustomResponse(
-            [
-                'token' => $token->getHash(),
-                'user_id' => $token->getUser()->getId(),
-                'user' => $token->getUser()->getUsername(),
-                'createdAt' => $token->getCreatedAt(),
-                'expiresAt' => $token->getExpiresAt()
-            ]
-        );
+        return new CustomResponse([
+            'token' => $token->getHash(),
+            'user_id' => $token->getUser()->getId(),
+            'user' => $token->getUser()->getUsername(),
+            'createdAt' => $token->getCreatedAt(),
+            'expiresAt' => $token->getExpiresAt()
+        ], 200);
     }
 }

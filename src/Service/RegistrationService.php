@@ -63,6 +63,6 @@ class RegistrationService
                 'state' => $user->getState(),
                 'createdAt' => $user->getCreatedAt()
             ]
-        ]);
+        ], 201);
     }
 }

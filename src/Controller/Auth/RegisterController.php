@@ -18,7 +18,7 @@ class RegisterController extends AbstractController
     }
 
     #[Route('/auth/register', name: 'app_auth_register', methods: ['POST'])]
-    public function index(Request $request): JsonResponse
+    public function register(Request $request): JsonResponse
     {
         return $this->registrationService->register($request->getContent())->toJson();
     }

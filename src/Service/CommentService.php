@@ -28,7 +28,7 @@ class CommentService
     ) {
     }
 
-    public function getAll(int $page, int $maxResults): AbstractResponse
+    public function getAll(?int $page, ?int $maxResults): AbstractResponse
     {
         if ($page == null) {
             $comments = $this->getAllComments();
